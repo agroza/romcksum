@@ -22,7 +22,7 @@ const
   k1KiB                  = 1024;
 
   { program stringtable }
-  sProgramTitle          = 'ROM Checksum Calculator  VER: 0.2 REV: A';
+  sProgramTitle          = 'ROM Checksum Calculator  VER: 0.2 REV: B';
   sProgramCopyright      = 'Copyright (C) 1998-2020 Microprogramming TECHNIQUES';
   sProgramAuthor         = 'Programming/PC Code: Alexandru Groza';
   sProgramRights         = 'All rights reserved.';
@@ -37,15 +37,40 @@ const
   pDelimiter             = '-';
   pTestOptionROM         = 'O';
 
-  sROMFileNotFound       = 'ROM file: %s not found.';
-  sROMFile               = 'ROM file: %s has a disk size of %d (%d KiB).';
-  sROMFileIsOptionROM    = 'ROM file: %s is an OPTION ROM.';
-  sROMFileIsNotOptionROM = 'ROM file: %s is not an OPTION ROM.';
-  sROMFileCorrectSize    = 'ROM file: %s has a correct size of %d (%d KiB).';
-  sROMFileWrongSize      = 'ROM file: %s has a wrong size of %d (%d KiB) instead of %d (%d KiB).';
-  sROMChecksum           = 'ROM checksum: 0x%xh (8-bit)';
+  sROMFileNotFound       = 'ROM file     : %s not found.';
+  sROMFile               = 'ROM file     : %s has a disk size of %d (%d KiB).';
+  sROMFileIsOptionROM    = 'ROM file     : %s is an OPTION ROM.';
+  sROMFileIsNotOptionROM = 'ROM file     : %s is not an OPTION ROM.';
+  sROMFileCorrectSize    = 'ROM file     : %s has a correct size of %d (%d KiB).';
+  sROMFileWrongSize      = 'ROM file     : %s has a wrong size of %d (%d KiB) instead of %d (%d KiB).';
+  sROMUsage              = 'ROM usage    : %2f%% (%d of %d)';
+  sROMChecksum           = 'ROM checksum : 0x%xh (8-bit)';
   sROMChecksumUpdated    = 'ROM file checksum updated.';
   sROMChecksumNotUpdated = 'ROM file checksum not updated.';
+
+function CalculateROMUsage(const AROMData: array of Byte): Integer;
+var
+  I: Integer;
+  LROMSize: Integer;
+  LFreeBytes: Integer;
+
+begin
+  LROMSize := Length(AROMData);
+  LFreeBytes := 0;
+
+  for I := Pred(LROMSize) downto 0 do
+  begin
+    if AROMData[I] = $00 then
+    begin
+      Inc(LFreeBytes);
+    end else
+    begin
+      Break;
+    end;
+  end;
+
+  Result := Succ(LROMSize) - LFreeBytes;
+end;
 
 procedure CalculateUpdateChecksum(const AFileName: String; const ATestOptionROM: Boolean);
 var
@@ -62,6 +87,7 @@ var
   LOptionROMSizeKiB: Integer;
 
   LROMData: array of Byte;
+  LBytesUsed: Integer;
   LROMChecksum: Byte;
   LROMTestChecksum: Byte;
 
@@ -117,6 +143,8 @@ begin
       LROMChecksum := LROMChecksum + LROMData[I];
     LROMChecksum := (256 - LROMChecksum) mod 256;
 
+    LBytesUsed := CalculateROMUsage(LROMData);
+    Writeln(Format(sROMUsage, [(LBytesUsed / LFileSize) * 100, LBytesUsed, LFileSize]));
     Writeln(Format(sROMChecksum, [LROMChecksum]));
 
     LFileStream.Seek(-SizeOf(LROMChecksum), soFromEnd);
