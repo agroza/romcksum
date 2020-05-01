@@ -22,7 +22,7 @@ const
   k1KiB                  = 1024;
 
   { program stringtable }
-  sProgramTitle          = 'ROM Checksum Calculator  VER: 0.2 REV: B';
+  sProgramTitle          = 'ROM Checksum Calculator  VER: 0.2 REV: C';
   sProgramCopyright      = 'Copyright (C) 1998-2020 Microprogramming TECHNIQUES';
   sProgramAuthor         = 'Programming/PC Code: Alexandru Groza';
   sProgramRights         = 'All rights reserved.';
@@ -32,50 +32,67 @@ const
                            '  %s [-o] <romfile.bin>' + #13#10#10 +
                            'Where -o is an optional parameter.' + #13#10 +
                            'If issued, the file will be tested to see if it is a valid OPTION ROM.';
-  sParameterIgnored      = 'Unexpected "%s" parameter ignored.' + #13#10;                         
+  sParameterIgnored      = 'Unexpected "%s" parameter ignored.' + #13#10;
 
   pDelimiter             = '-';
   pTestOptionROM         = 'O';
 
-  sROMFileNotFound       = 'ROM file     : %s not found.';
-  sROMFile               = 'ROM file     : %s has a disk size of %d (%d KiB).';
-  sROMFileIsOptionROM    = 'ROM file     : %s is an OPTION ROM.';
-  sROMFileIsNotOptionROM = 'ROM file     : %s is not an OPTION ROM.';
-  sROMFileCorrectSize    = 'ROM file     : %s has a correct size of %d (%d KiB).';
-  sROMFileWrongSize      = 'ROM file     : %s has a wrong size of %d (%d KiB) instead of %d (%d KiB).';
-  sROMUsage              = 'ROM usage    : %2f%% (%d of %d)';
+  sROMFileNotFound       = 'ROM file "%s" not found.';
+  sROMFile               = 'ROM file     : %s';
+  sROMFileDiskSize       = 'Disk size    : %d (%d KiB)';
+  sROMFileOptionROM      = 'Option ROM   : %s';
+  sROMFileROMBlocks      = 'ROM blocks   : %d, %d (%d KiB), %s';
+  sROMUsage              = 'ROM usage    : %2f%% (%d/%d)';
   sROMChecksum           = 'ROM checksum : 0x%xh (8-bit)';
   sROMChecksumUpdated    = 'ROM file checksum updated.';
   sROMChecksumNotUpdated = 'ROM file checksum not updated.';
 
+  sYESNO: array[Boolean] of String = (
+    'NO',
+    'YES'
+  );
+
+  sWRONGCORRECT: array[Boolean] of String = (
+    'WRONG',
+    'CORRECT'
+  );
+
 function CalculateROMUsage(const AROMData: array of Byte): Integer;
 var
   I: Integer;
-  LROMSize: Integer;
-  LFreeBytes: Integer;
 
 begin
-  LROMSize := Length(AROMData);
-  LFreeBytes := 0;
+  Result := Length(AROMData);
 
-  for I := Pred(LROMSize) downto 0 do
+  for I := Pred(Result) downto 0 do
   begin
     if AROMData[I] = $00 then
     begin
-      Inc(LFreeBytes);
+      Dec(Result);
     end else
     begin
       Break;
     end;
   end;
 
-  Result := Succ(LROMSize) - LFreeBytes;
+  Inc(Result);
+end;
+
+function CalculateROMChecksum(const AROMData: array of Byte): Byte;
+var
+  I: Integer;
+
+begin
+  Result := 0;
+
+  for I := 0 to Pred(Length(AROMData)) do
+    Result := Result + AROMData[I];
+
+  Result := (256 - Result) mod 256;
 end;
 
 procedure CalculateUpdateChecksum(const AFileName: String; const ATestOptionROM: Boolean);
 var
-  I: Integer;
-
   LOnlyFileName: String;
   LFileStream: TFileStream;
   LFileSize: Int64;
@@ -106,31 +123,19 @@ begin
     LFileSize := LFileStream.Size;
     LFileSizeKiB := LFileSize div k1KiB;
 
-    Writeln(Format(sROMFile, [LOnlyFileName, LFileSize, LFileSizeKiB]));
+    Writeln(Format(sROMFile, [LOnlyFileName]));
+    Writeln(Format(sROMFileDiskSize, [LFileSize, LFileSizeKiB]));
 
     if ATestOptionROM then
     begin
       LFileStream.Seek(0, soFromBeginning);
       LFileStream.Read(LOptionROMSignature, SizeOf(LOptionROMSignature));
-      if LOptionROMSignature = kOptionROMSignature then
-      begin
-        Writeln(Format(sROMFileIsOptionROM, [LOnlyFileName]));
-      end else
-      begin
-        Writeln(Format(sROMFileIsNotOptionROM, [LOnlyFileName]));
-      end;
+      Writeln(Format(sROMFileOptionROM, [sYESNO[LOptionROMSignature = kOptionROMSignature]]));
 
       LFileStream.Read(LOptionROMBlocks, SizeOf(LOptionROMBlocks));
       LOptionROMSize := LOptionROMBlocks * kBytesPerBlock;
       LOptionROMSizeKiB := LOptionROMSize div k1KiB;
-
-      if LOptionROMSize = LFileSize then
-      begin
-        Writeln(Format(sROMFileCorrectSize, [LOnlyFileName, LOptionROMSize, LOptionROMSizeKiB]));
-      end else
-      begin
-        Writeln(Format(sROMFileWrongSize, [LOnlyFileName, LFileSize, LFileSizeKiB, LOptionROMSize, LOptionROMSizeKiB]));
-      end;
+      Writeln(Format(sROMFileROMBlocks, [LOptionROMBlocks, LOptionROMSize, LOptionROMSizeKiB, sWRONGCORRECT[LOptionROMSize = LFileSize]]));
     end;
 
     SetLength(LROMData, LFileSize);
@@ -138,13 +143,10 @@ begin
     LFileStream.Seek(0, soFromBeginning);
     LFileStream.Read(LROMData[0], Pred(Length(LROMData)));
 
-    LROMChecksum := 0;
-    for I := 0 to Pred(Length(LROMData)) do
-      LROMChecksum := LROMChecksum + LROMData[I];
-    LROMChecksum := (256 - LROMChecksum) mod 256;
-
     LBytesUsed := CalculateROMUsage(LROMData);
     Writeln(Format(sROMUsage, [(LBytesUsed / LFileSize) * 100, LBytesUsed, LFileSize]));
+
+    LROMChecksum := CalculateROMChecksum(LROMData);
     Writeln(Format(sROMChecksum, [LROMChecksum]));
 
     LFileStream.Seek(-SizeOf(LROMChecksum), soFromEnd);
