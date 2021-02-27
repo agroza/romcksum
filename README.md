@@ -8,7 +8,7 @@ At the end of the calculation the checksum byte is updated in the binary file.
 
 ### Program Usage
 
-I pasted these lines straight from the commandline help screen.
+The following lines are taken straight from the commandline help screen.
 
 ```
 Usage is:
