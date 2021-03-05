@@ -1,4 +1,6 @@
-# romcksum and romcksum32
+# ROM Checksum Calculator
+
+This project is also known as either ```romcksum``` or ```romcksum32```, depending on the target operating system.
 
 ## Synopsis
 
