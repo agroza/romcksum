@@ -20,7 +20,7 @@ Usage is:
 
 Where:
   -help          shows this screen; all other parameters are ignored
-  <filename.bin> is the actual ROM file for checksum calculation
+  <romfile.bin>  is the actual ROM file for checksum calculation
 ```
 
 ### romcksum32 Program Usage
