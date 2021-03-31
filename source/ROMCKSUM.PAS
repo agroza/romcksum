@@ -1,6 +1,6 @@
 { --------------------------------------------------------------------------- }
 { - ROM Checksum Calculator (romcksum.pas)                                  - }
-{ - Copyright (C) 1998-2020 Alexandru Groza of Microprogramming TECHNIQUES  - }
+{ - Copyright (C) 1998-2021 Alexandru Groza of Microprogramming TECHNIQUES  - }
 { - All rights reserved.                                                    - }
 { --------------------------------------------------------------------------- }
 { - License: GNU General Public License v3.0                                - }
@@ -15,7 +15,7 @@ const
   { program stringtable }
   sEmpty                  = '';
 
-  sProgramTitle           = 'ROM Checksum Calculator  VER: 0.1 REV: C';
+  sProgramTitle           = 'ROM Checksum Calculator  VER: 0.1 REV: D';
   sProgramCopyright       = 'Copyright (C) 1998-2021 Microprogramming TECHNIQUES';
   sProgramAuthor          = 'Programming/PC Code: Alexandru Groza';
   sProgramRights          = 'All rights reserved.';
@@ -28,7 +28,7 @@ const
                             '  romcksum.exe [-help] <romfile.bin>' + #13#10;
   sHelpParameters1        = 'Where:' + #13#10 +
                             '  -help          shows this screen; all other parameters are ignored' + #13#10 +
-                            '  <filename.bin> is the actual ROM file for checksum calculation';
+                            '  <romfile.bin>  is the actual ROM file for checksum calculation';
 
   sCannotOpenInputFile    = 'Cannot open input file ';
   sCannotReadInputFile    = 'Cannot read input file ';
