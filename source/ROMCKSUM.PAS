@@ -15,7 +15,7 @@ const
   { program stringtable }
   sEmpty                  = '';
 
-  sProgramTitle           = 'ROM Checksum Calculator  VER: 0.1 REV: D';
+  sProgramTitle           = 'ROM Checksum Calculator  VER: 0.2 REV: A';
   sProgramCopyright       = 'Copyright (C) 1998-2021 Microprogramming TECHNIQUES';
   sProgramAuthor          = 'Programming/PC Code: Alexandru Groza';
   sProgramRights          = 'All rights reserved.';
@@ -49,17 +49,24 @@ const
   fmWriteOnly             = 1;
   fmReadWrite             = 2;
 
-function IntToHex(const AValue: Longint): String;
+function IntToHex(const AInteger: Integer): String;
 const
+  kHexLength = 4;
   kHexDigits: array[$00..$0F] of Char = '0123456789ABCDEF';
 
+var
+  I: Integer;
+  LInteger: Integer;
+
 begin
-  if AValue <= 0 then
+  LInteger := AInteger;
+
+  IntToHex[0] := Char(kHexLength);
+
+  for I := kHexLength downto 1 do
   begin
-    IntToHex := sEmpty;
-  end else
-  begin
-    IntToHex := IntToHex(AValue div $10) + kHexDigits[AValue mod $10];
+    IntToHex[I] := kHexDigits[LInteger and $0F];
+    LInteger := LInteger shr $04;
   end;
 end;
 
